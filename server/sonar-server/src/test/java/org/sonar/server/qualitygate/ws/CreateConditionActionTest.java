@@ -143,7 +143,7 @@ public class CreateConditionActionTest {
     assertThat(action).isNotNull();
     assertThat(action.isInternal()).isFalse();
     assertThat(action.isPost()).isTrue();
-    assertThat(action.responseExampleAsString()).isNull();
+    assertThat(action.responseExampleAsString()).isNotEmpty();
     assertThat(action.params()).hasSize(6);
   }
 
