@@ -105,37 +105,12 @@ function fixBuildVersion {
 #
 function configureTravis {
   mkdir -p ~/.local
-  curl -sSL https://github.com/SonarSource/travis-utils/tarball/v38 | tar zx --strip-components 1 -C ~/.local
+  curl -sSL https://github.com/SonarSource/travis-utils/tarball/c318413113803e4e725a2de657fa6e3728679598 | tar zx --strip-components 1 -C ~/.local
   source ~/.local/bin/install
 }
 configureTravis
 
-# When pull request exists on the branch, then the job related to the branch does not need
-# to be executed and should be canceled. It does not book slaves for nothing.
-# @TravisCI please provide the feature natively, like at AppVeyor or CircleCI ;-)
-CURL_SILENT_CMD="curl --write-out %{http_code} --silent"
-CURL_VERBOSE_CMD="curl --write-out %{http_code}"
-CURL_CMD=$CURL_VERBOSE_CMD
-
-if [[ $TRAVIS_BRANCH != *"master" ]]; then
-    if [ -n "${GITHUB_TOKEN:-}" ]; then
-        if [ "$TRAVIS_PULL_REQUEST" == "false" ]; then
-            #if we are not in a pullrequest build and the current branch has a pull request open, cancel job
-            PULL_REQUEST_STATUS=`curl --silent "https://api.github.com/repos/$TRAVIS_REPO_SLUG/pulls?access_token=$GITHUB_TOKEN&head=SonarSource:$TRAVIS_BRANCH&state=open" | jq -r .[0].state`
-
-            if [ "$PULL_REQUEST_STATUS" == "open" ]; then
-                echo "======= branch with open pull request, exiting the build ======="
-                exit 0
-            else
-                echo "======= branch with no open pull request, building ======="
-            fi
-        else
-            echo "======= in a pull request: building ======="
-        fi
-    else
-        echo "======= Can not connect to github without a token set in GITHUB_TOKEN environment variable ======="
-    fi
-fi
+cancel_branch_build_with_pr || if [[ $? -eq 1 ]]; then exit 0; fi
 
 case "$TARGET" in
 
